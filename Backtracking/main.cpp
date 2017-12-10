@@ -82,7 +82,6 @@ private:
 //};
 
 
-//
 //class SubSetSum : public VectorBacktracker<char> {
 //public:
 //    SubSetSum(const vector<int> set, int desiredSum):_set(set),_desiredSum(desiredSum){}
