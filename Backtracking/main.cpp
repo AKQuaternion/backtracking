@@ -13,16 +13,20 @@ using std::endl;
 using std::vector;
 #include <numeric>
 using std::iota;
+using std::accumulate;
 #include <utility>
 using std::move;
-
+#include <iterator>
+using std::begin;
+using std::end;
+#include <algorithm>
+using std::all_of;
 #include "Backtracker.hpp"
+
 class NQueens : public VectorBacktracker<int> {
 public:
     NQueens(int n):_n(n){}
-    int getNumSolutions() {
-        return _numSolutions;
-    }
+
 private:
     bool isFullSolution() const override
     {
@@ -52,7 +56,6 @@ private:
     void registerSolution() override
     {
         auto & p = currentPartialSolution();
-        ++_numSolutions;
         for(auto qcol:p) {
             for(int j=0;j<_n;++j)
                 if (j==qcol)
@@ -66,109 +69,60 @@ private:
     
 private:
     int _n;
-    int _numSolutions=0;
 };
-//using Index = unsigned int;
-//class SubSetBacktracker : public VectorBacktracker<Index> {
-//private:
-//    virtual size_t numElements() const =0;
-//    virtual std::vector<Index> choices(const PartialSolution &p)const
-//    {
-//        int start = p.empty() ? 0 : p.back()+1;
-//        vector<Index> c(numElements()-start);
-//        iota(begin(c),end(c),start);
-//        return c;
-//    }
-//};
+
+struct QueenPosition {
+    int _row;
+    int _col;
+};
+
+class NQueens2 : public VectorBacktracker<QueenPosition> {
+public:
+    NQueens2(int n):_n(n){}
+
+private:
+    bool isFullSolution() const override
+    {
+        return currentPartialSolution().size()==_n;
+    }
+    
+    vector<QueenPosition> choices() const override
+    {
+        auto & p = currentPartialSolution();
+        vector<QueenPosition> ret;
+        auto row=int(p.size());
+        for(int col=0;col<_n;++col) {
+            QueenPosition me{row,col};
+            auto doesNotAttack=[me](const QueenPosition &pos){
+                return pos._col!=me._col && me._col-pos._col != me._row-pos._row &&  me._col-pos._col!=pos._row-me._row;
+            };
+            if (all_of(p.begin(),p.end(),doesNotAttack)) {
+                ret.push_back(me);
+                cout << ret.size() << endl;
+            }
+        }
+        return ret;
+    }
+    
+    void registerSolution() override
+    {
+        auto & p = currentPartialSolution();
+        for(auto qpos:p) {
+            for(int j=0;j<_n;++j)
+                if (j==qpos._col)
+                    cout << "Q ";
+                else
+                    cout << ". ";
+            cout << endl;
+        }
+        cout << endl;
+    }
+    
+private:
+    int _n;
+};
 
 
-//class SubSetSum : public VectorBacktracker<char> {
-//public:
-//    SubSetSum(const vector<int> set, int desiredSum):_set(set),_desiredSum(desiredSum){}
-//
-//private:
-//    bool isFullSolution(const PartialSolution &p) const override
-//    {
-//        if(p.size()!=_set.size())
-//            return false;
-//        auto sum=0;
-//        for(int i=0;i<p.size();++i)
-//            if(p[i])
-//                sum+=_set[i];
-//        return sum==_desiredSum;
-//    }
-//
-//    bool shouldExplore(const PartialSolution &p) const override
-//    {
-//        if( p.size() >_set.size())
-//            return false;
-//        auto sum=0;
-//        for(int i=0;i<p.size();++i)
-//            if(p[i])
-//                sum+=_set[i];
-//        return (sum <= _desiredSum);
-//    }
-//
-//    std::vector<char> choices(const PartialSolution &) const override
-//    {
-//        return {false,true};
-//    }
-//
-//    void registerSolution(const PartialSolution &p) override
-//    {
-//        for(int i=0;i<p.size();++i)
-//            if(p[i])
-//                cout << _set[i] << " ";
-//        cout << endl;
-//    }
-//
-//    vector<int> _set;
-//    int _desiredSum;
-//};
-//
-//class SubSetSumIndexed : public SubSetBacktracker {
-//public:
-//    SubSetSumIndexed(const vector<int> set, int desiredSum):_set(set),_desiredSum(desiredSum){}
-//private:
-//    int sum(const PartialSolution &p) const
-//    {
-//        auto sum=0;
-//        for(auto i:p)
-//            sum += _set[i];
-//        return sum;
-//    }
-//
-//    virtual bool isFullSolution(const PartialSolution &p) const override
-//    {
-//        return sum(p) == _desiredSum;
-//    }
-//
-//    virtual bool shouldExplore(const PartialSolution &p) const override
-//    {
-//        return sum(p) <= _desiredSum;
-//    }
-//
-//    virtual size_t numElements() const override {
-//        return _set.size();
-//    }
-//
-//    virtual void registerSolution(const PartialSolution &p) override
-//    {
-//        for(auto i:p)
-//            cout << _set[i] << " ";
-//        cout << endl;
-//    }
-//
-//private:
-//    vector<int> _set;
-//    int _desiredSum;
-//};
-//
-//struct Item {
-//    int _weight;
-//    int _value;
-//};
-//
 //class Knapsack : public VectorBacktracker<char>
 //{
 //public:
@@ -236,23 +190,95 @@ private:
 //    int _bestValue=0;
 //};
 
+//template <typename Number>
+class SubSetSum : public SubSetBacktracker<int> {
+    using Number = int;
+    // In the future we can deduce the int, maybe?
+//    using SubSetBacktracker<Number>::currentPartialSolution;
+//    using SubSetBacktracker<Number>::element;
+public:
+    SubSetSum(const vector<Number> set, int desiredSum):SubSetBacktracker<Number>(set),_desiredSum(desiredSum){}
+private:
+    virtual bool isFullSolution() const override
+    {
+        return sum() == _desiredSum;
+    }
+
+    virtual bool shouldExplore() const override
+    {
+        return sum() <= _desiredSum;
+    }
+
+    virtual void registerSolution() override
+    {
+        for(auto i:currentElements())
+            cout << i << " ";
+        cout << endl;
+    }
+
+    int sum() const
+    {
+        return accumulate(begin(currentElements()),end(currentElements()),0);
+    }
+    
+    int _desiredSum;
+};
+
+class SubSetSumEfficient : public SubSetBacktracker<int> {
+    using Number =  int;
+    // In the future we can deduce the int, maybe?
+    //    using SubSetBacktracker<Number>::currentPartialSolution;
+    //    using SubSetBacktracker<Number>::element;
+public:
+    SubSetSumEfficient(const vector<Number> set, int desiredSum)
+    :SubSetBacktracker<Number>(set),_desiredSum(desiredSum),_currentSum{}
+    {}
+private:
+    virtual bool isFullSolution() const override
+    {
+        return _currentSum == _desiredSum;
+    }
+    
+    virtual bool shouldExplore() const override
+    {
+        return _currentSum <= _desiredSum;
+    }
+    
+    virtual void registerSolution() override
+    {
+        for(auto i:currentElements())
+            cout << i << " ";
+        cout << endl;
+    }
+    virtual void elementUpdate(const Number &n) override
+    {
+        _currentSum += n;
+    }
+    virtual void elementUnupdate(const Number &n) override
+    {
+        _currentSum -= n;
+    }
+    int _desiredSum;
+    int _currentSum;
+};
+
 int main() {
-    NQueens board(8);
+    vector<int> v;
+    v.push_back(1);
+    cout << v.size() << endl;
+    
+    NQueens2 board(8);
     board.solve();
     cout << board.report() << endl;
     
-//    SubSetSum s1({2, 3, 5, 6, 8, 10},100);
+//    SubSetSumEfficient s1({2, 3, 5, 6, 8, 10},10);
 //    s1.solve();
+//    cout << s1.report() << endl;
 //
-//    SubSetSum s2({10,8,6,5,3,2},100);
+//    SubSetSumEfficient s2({-1,-1,-1,1,1,1},0);
 //    s2.solve();
-//
-//    SubSetSumIndexed s3({2, 3, 5, 6, 8, 10},100);
-//    s3.solve();
-//
-//    SubSetSumIndexed s4({10,8,6,5,3,2},100);
-//    s4.solve();
-
+//    cout << s2.report() << endl;
+    
 //    Knapsack k({{4,40},{7,42},{5,25},{3,12}},10);
 //    k.solve();
 //    k.printBestSolution();
@@ -260,8 +286,11 @@ int main() {
 }
 
 /*
- Write a more general version where (add this choice to partial solution) is user defined (to make SubsetSum more efficient.)
+Explain about how to write partial specializations needs to specify base class usings
+
+ How to handle whether should prune after a full solution or not?
  
+ Template parameter for type of collection of choices?
  
  */
     
