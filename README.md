@@ -1,11 +1,11 @@
 # backtracking
 
 ## `Backtracker<Choice, PartialSolution>`
-The most general form is the class `Backtracker<Choice, PartialSolution>`. The Choice template classes is a class (or type) indicating
+The most general form is the class `Backtracker<Choice, PartialSolution>`. The Choice template is a class (or type) indicating
 the choice made at a particular step, and PartialSolution is a class representing a set of choices taken so far. For instance, if
 implementing the standard N-Queens example, where we choose a column to put the queen in for each row, we would probably choose
 `Choice = int`, and `PartialSolution = vector<int>`. To implement a Backtracking search, write a class that derives from
-`Backtracker<Choice,PartialSolution> and implement the following (virtual) member functions:
+`Backtracker<Choice,PartialSolution> and implement (if necessary) the following (virtual) member functions:
 
 ```c++
     virtual bool isFullSolution() const {return true;}
@@ -15,7 +15,7 @@ implementing the standard N-Queens example, where we choose a column to put the 
     virtual void applyChoice(const Choice &c)=0;
     virtual void unapplyChoice(const Choice &c)=0;
 ```
-You will probably want to call `currentPartialSolution()` which returns the current partial solution. 
+To implement these, you will probably want to call `currentPartialSolution()` which returns the current partial solution. 
 
 `isFullSolution()` should return true if the current partial solution is actually a full solution to the problem.
 
@@ -27,3 +27,26 @@ You will probably want to call `currentPartialSolution()` which returns the curr
 
 `applyChoice(const Choice &c)` and `unapplyChoice(const Choice &c)` should apply (or unapply) the given choice to the current partial solution.
 
+## `VectorBacktracker<Choice>`
+The most common way of representing a partial solution is with a vector of the choices made so far. This specialization is just
+`Backtracker<Choice, vector<Choice>>` where `applyChoice(const Choice &c)` and `unapplyChoice(const Choice &c)` have been written for
+you:
+```c++
+    virtual void applyChoice(const Choice &c) override final
+    {
+        currentPartialSolution().push_back(c);
+        choiceUpdate(c);
+    }
+    virtual void unapplyChoice(const Choice &c) override final
+    {
+        choiceUnupdate(c);
+        currentPartialSolution().pop_back();
+    }
+```
+Thus, there are two new member functions you may override if necessary:
+```c++
+    virtual void choiceUpdate(const Choice &c){}
+    virtual void choiceUnupdate(const Choice &c){}
+```
+
+## 
