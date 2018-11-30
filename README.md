@@ -1,6 +1,6 @@
 # backtracking
 
-##`Backtracker<Choice, PartialSolution>`
+## `Backtracker<Choice, PartialSolution>`
 The most general form is the class `Backtracker<Choice, PartialSolution>`. The Choice template classes is a class (or type) indicating
 the choice made at a particular step, and PartialSolution is a class representing a set of choices taken so far. For instance, if
 implementing the standard N-Queens example, where we choose a column to put the queen in for each row, we would probably choose
