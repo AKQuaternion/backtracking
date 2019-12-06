@@ -6,8 +6,8 @@
 //  Copyright © 2017 Chris Hartman. All rights reserved.
 //
 
-#ifndef Backtracker_hpp
-#define Backtracker_hpp
+#ifndef BACKTRACKING_BACKTRACKER_HPP
+#define BACKTRACKING_BACKTRACKER_HPP
 #include <vector>
 // for std::vector
 #include <string>
@@ -38,14 +38,14 @@ public:
     }
 protected:
     PartialSolution & currentPartialSolution() {return _partialSolution;}
-    const PartialSolution & currentPartialSolution() const {return _partialSolution;}
+    [[nodiscard]] const PartialSolution & currentPartialSolution() const {return _partialSolution;}
 private:
     virtual PartialSolution emptyPartialSolution(){return {};}
     // this should set up auxiliary information and return an empty PartialSolution
     // is this a violation of SRP? Is it exception safe?
-    virtual bool isFullSolution() const {return true;}
-    virtual bool shouldExplore() const {return true;}
-    virtual std::vector<Choice> choices() const=0;
+    [[nodiscard]] virtual bool isFullSolution() const {return true;}
+    [[nodiscard]] virtual bool shouldExplore() const {return true;}
+    [[nodiscard]] virtual std::vector<Choice> choices() const=0;
     virtual void registerSolution()=0;
     virtual void applyChoice(const Choice &c)=0;
     virtual void unapplyChoice(const Choice &c)=0;
@@ -78,12 +78,12 @@ protected:
 private:
     virtual void choiceUpdate(const Choice &c){}
     virtual void choiceUnupdate(const Choice &c){}
-    virtual void applyChoice(const Choice &c) override final
+    void applyChoice(const Choice &c) final
     {
         currentPartialSolution().push_back(c);
         choiceUpdate(c);
     }
-    virtual void unapplyChoice(const Choice &c) override final
+    void unapplyChoice(const Choice &c) final
     {
         choiceUnupdate(c);
         currentPartialSolution().pop_back();
@@ -93,11 +93,11 @@ private:
 template<typename Element>
 class SubSetBacktracker : public VectorBacktracker<unsigned int> { //maybe unsigned short?
 public:
-    SubSetBacktracker(std::vector<Element> elements):_elements(std::move(elements))
+    explicit SubSetBacktracker(std::vector<Element> elements):_elements(std::move(elements))
     {}
 protected:
-    virtual void choiceUpdate(const unsigned int &c){elementUpdate(_elements[c]);}
-    virtual void choiceUnupdate(const unsigned int &c){elementUnupdate(_elements[c]);}
+  void choiceUpdate(const unsigned int &c) final {elementUpdate(_elements[c]);}
+     void choiceUnupdate(const unsigned int &c) final {elementUnupdate(_elements[c]);}
     virtual void elementUpdate(const Element &e){}
     virtual void elementUnupdate(const Element &e){}
     Element & baseElement(unsigned int i)
@@ -115,7 +115,7 @@ protected:
     }
     
 private:
-    virtual std::vector<unsigned int> choices()const
+    [[nodiscard]] std::vector<unsigned int> choices() const final
     {
         auto & p = currentPartialSolution();
         int start = p.empty() ? 0 : p.back()+1;
@@ -126,4 +126,4 @@ private:
 
     std::vector<Element> _elements;
 };
-#endif /* Backtracker_hpp */
+#endif /*BACKTRACKING_BACKTRACKER_HPP*/

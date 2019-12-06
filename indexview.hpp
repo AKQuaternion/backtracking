@@ -6,8 +6,8 @@
 //  Copyright © 2017 Chris Hartman. All rights reserved.
 //
 
-#ifndef indexview_h
-#define indexview_h
+#ifndef BACKTRACKING_INDEXVIEW_HPP
+#define BACKTRACKING_INDEXVIEW_HPP
 #include <vector>
 namespace indexview {
 
@@ -118,4 +118,4 @@ IndexView<Element,Index> makeIndexView(std::vector<Element> &baseSet, const std:
 }
 }
 
-#endif /* indexview_h */
+#endif /*BACKTRACKING_INDEXVIEW_HPP*/
